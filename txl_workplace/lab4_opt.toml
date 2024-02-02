@@ -1,0 +1,74 @@
+# basics
+model = "vgg7"
+dataset = "cifar10"
+task = "cls"
+
+max_epochs = 5
+batch_size = 512
+learning_rate = 1e-2
+accelerator = "cpu"
+project = "vgg7-search"
+seed = 42
+log_every_n_steps = 5
+load_name = "/mnt/c/workplace/projects/ADLS/mase/mase_output/vgg7_classification_cifar10_2024-02-02/software/training_ckpts/best.ckpt"
+#load_name = "/mnt/d/project_files/Python/mase/mase_output/jsc-tiny_classification_jsc_2024-01-19/software/training_ckpts/best.ckpt"
+load_type = "pl"
+
+[search.search_space]
+name = "channel_multiplier_search"
+
+#[search.search_space.setup]
+#by = 'name'
+
+[search.search_space.seed.default.config]
+# the only choice "NA" is used to indicate that layers are not quantized by default
+name = ["NA"]
+
+[search.search_space.seed.seq_blocks_2.config]
+name = ["output_only"]
+channel_multiplier = [1, 2, 4]
+
+[search.search_space.seed.seq_blocks_3.config]
+prev_link = ["seq_blocks_2"]
+
+[search.search_space.seed.seq_blocks_5.config]
+name = ["both"]
+prev_link = ["seq_blocks_2"]
+channel_multiplier = [1, 2, 4]
+
+[search.search_space.seed.seq_blocks_6.config]
+prev_link = ["seq_blocks_5"]
+
+[search.search_space.seed.seq_blocks_8.config]
+name = ["input_only"]
+prev_link = ["seq_blocks_5"]
+
+
+[search.strategy]
+#name = "txl_bf"
+name = "optuna"
+eval_mode = true
+
+[search.strategy.sw_runner.basic_evaluation]
+data_loader = "val_dataloader"
+num_samples = 512
+
+[search.strategy.hw_runner.average_bitwidth]
+compare_to = 32 # compare to FP32
+
+[search.strategy.setup]
+n_jobs = 1
+n_trials = 20
+timeout = 20000
+sampler = "tpe"
+sum_scaled_metrics = true # single objective
+direction = "maximize"
+#sum_scaled_metrics = false # multi objective
+
+[search.strategy.metrics]
+#loss.scale = 1.0
+#loss.direction = "minimize"
+accuracy.scale = 1.0
+accuracy.direction = "maximize"
+#average_bitwidth.scale = -0.1
+#average_bitwidth.direction = "minimize"
