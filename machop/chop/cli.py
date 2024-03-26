@@ -309,6 +309,8 @@ class ChopCLI:
             "load_type": self.args.load_type,
         }
 
+        self.logger.info(f"##### WEIGHT DECAY ##### {self.args.weight_decay}")
+
         train(**train_params)
         self.logger.info("Training is completed")
 
